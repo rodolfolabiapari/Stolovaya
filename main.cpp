@@ -31,17 +31,26 @@ unsigned char at_gray_pixel(char * d, int row, int col) {
 }
 
 
-void copy_to_complex(fftw_complex * in_complex_b, fftw_complex * in_complex_g, fftw_complex * in_complex_r, char * data, char BW) {
+/*
+ * Copy the values of image to the vector of complex values.
+ * 
+ * This procedure copy the datas of char's array to the another which name is
+ * fftw_complex, from fftw3 library.
+ * 
+ * The data is colocated in position 0, local of the real numbers.
+ */
+void copy_to_complex(fftw_complex * in_complex_b, fftw_complex * in_complex_g, 
+        fftw_complex * in_complex_r, char * data, char BW) {
    int i, j, DEBUG;
    
    DEBUG = 0;
    
    j = 0;
-   for (i = 0; i < WIDTH * HEIGHT * 2; i++) {
+   for (i = 0; i < WIDTH * HEIGHT; i++) {
       
       in_complex_b[i][0] = (unsigned char) data[j];
 
-      if (DEBUG)  printf("%d:%f\n",i, in_complex_b[i][0]);
+      if (DEBUG)  printf("%6d:%d\t%f\n",i, WIDTH * HEIGHT, in_complex_b[i][0]);
       
       if (!BW) {
 	 j++;
@@ -162,7 +171,7 @@ void magnitude_pixel_logarithm(double max_b, double max_g, double max_r,
 {
    double c_b, c_g, c_r;
    int i, j;
-   char DEBUG = 1;
+   char DEBUG = 0;
    
    
    c_b = 255 / (log(1 + max_b));
@@ -284,6 +293,61 @@ void swap_quadrants_gray_image(char * pixels)
    }
 }
 
+void generate_spectrum() {
+    
+   DEBUG = 0;
+   // Get the values and transform its in magnitude and phase
+   for (i = 0; i < WIDTH * HEIGHT; i++) {
+      
+      if (DEBUG)  printf("i:%5d:%5d", i, WIDTH * HEIGHT);
+      
+      get_real_and_complex(&real_b, &imag_b, &real_g, &imag_g, &real_r, &imag_r, out_complex_b[i], out_complex_g[i], out_complex_r[i], 0, BW);
+      
+      // Calcule the magnitude
+      mag_b[i] = sqrt((real_b * real_b) + (imag_b * imag_b));
+      
+      if (DEBUG)  printf("  |  FFTW(%012.3f, %012.3f)", real_b, imag_b);
+      if (DEBUG)  printf("  |  Mg(%012.3f)", mag_b[i]);
+
+      if (!BW) {
+	 mag_g[i] = sqrt((real_g * real_g) + (imag_g * imag_g));
+	 mag_r[i] = sqrt((real_r * real_r) + (imag_r * imag_r));
+
+	 if (DEBUG)  printf(" (%012.3f, %012.3f) (%012.3f, %012.3f)", real_g, imag_g, real_r, imag_r);
+	 if (DEBUG)  printf(" (%012.3f) (%012.3f)", mag_g[i], mag_r[i]);
+      }
+      
+      if (i == 0) {
+	 max_mag_b = mag_b[i]; max_mag_g = mag_g[i]; max_mag_r = mag_r[i];
+	 
+	 min_mag_b = mag_b[i]; min_mag_g = mag_g[i];  min_mag_r = mag_r[i];
+	 
+      } else {
+	 if (mag_b[i] > max_mag_b) max_mag_b = mag_b[i];
+	 if (mag_g[i] > max_mag_g) max_mag_g = mag_g[i];
+	 if (mag_r[i] > max_mag_r) max_mag_r = mag_r[i];
+	 
+	 if (mag_b[i] < min_mag_b) min_mag_b = mag_b[i];
+	 if (mag_g[i] < min_mag_g) min_mag_g = mag_g[i];
+	 if (mag_r[i] < min_mag_r) min_mag_r = mag_r[i];
+      }
+      
+      calcule_phase(i, real_b, imag_b, real_g, imag_g, real_r, imag_r, (*outPhase).imageData, BW);
+
+      fflush(stdout);
+   }
+   
+   printf("M%f, m%f\n", max_mag_b, min_mag_b);
+   
+   magnitude_pixel_logarithm(max_mag_b, max_mag_g, max_mag_r, 
+	   min_mag_b, min_mag_g, min_mag_r, (*outMag).imageData, mag_b, mag_g, mag_r, BW);
+   
+   //swap_quadrants_gray_image((*outMag).imageData);
+   //swap_quadrants_gray_image((*outPhase).imageData);
+
+}
+
+
 void fft(IplImage * image_in, IplImage * outMag,
 	IplImage * outPhase, IplImage * outSpectrum, char BW)
 {
@@ -340,58 +404,10 @@ void fft(IplImage * image_in, IplImage * outMag,
       fftw_execute(plan_r);
    }
 
-   DEBUG = 1;
-   // Get the values and transform its in magnitude and phase
-   for (i = 0; i < WIDTH * HEIGHT; i++) {
-      
-      if (DEBUG)  printf("i:%5d:%5d", i, WIDTH * HEIGHT);
-      
-      get_real_and_complex(&real_b, &imag_b, &real_g, &imag_g, &real_r, &imag_r, out_complex_b[i], out_complex_g[i], out_complex_r[i], 0, BW);
-      
-      // Calcule the magnitude
-      mag_b[i] = sqrt((real_b * real_b) + (imag_b * imag_b));
-      
-      if (DEBUG)  printf("  |  FFTW(%012.3f, %012.3f)", real_b, imag_b);
-      if (DEBUG)  printf("  |  Mg(%012.3f)", mag_b[i]);
-
-      if (!BW) {
-	 mag_g[i] = sqrt((real_g * real_g) + (imag_g * imag_g));
-	 mag_r[i] = sqrt((real_r * real_r) + (imag_r * imag_r));
-
-	 if (DEBUG)  printf(" (%012.3f, %012.3f) (%012.3f, %012.3f)", real_g, imag_g, real_r, imag_r);
-	 if (DEBUG)  printf(" (%012.3f) (%012.3f)", mag_g[i], mag_r[i]);
-      }
-      
-      if (i == 0) {
-	 max_mag_b = mag_b[i]; max_mag_g = mag_g[i]; max_mag_r = mag_r[i];
-	 
-	 min_mag_b = mag_b[i]; min_mag_g = mag_g[i];  min_mag_r = mag_r[i];
-	 
-      } else {
-	 if (mag_b[i] > max_mag_b) max_mag_b = mag_b[i];
-	 if (mag_g[i] > max_mag_g) max_mag_g = mag_g[i];
-	 if (mag_r[i] > max_mag_r) max_mag_r = mag_r[i];
-	 
-	 if (mag_b[i] < min_mag_b) min_mag_b = mag_b[i];
-	 if (mag_g[i] < min_mag_g) min_mag_g = mag_g[i];
-	 if (mag_r[i] < min_mag_r) min_mag_r = mag_r[i];
-      }
-      
-      fflush(stdout);
-      
-      calcule_phase(i, real_b, imag_b, real_g, imag_g, real_r, imag_r, (*outPhase).imageData, BW);
-
-      fflush(stdout);
+   generate_spectrum() {
+       
    }
    
-   printf("M%f, m%f\n", max_mag_b, min_mag_b);
-   
-   magnitude_pixel_logarithm(max_mag_b, max_mag_g, max_mag_r, 
-	   min_mag_b, min_mag_g, min_mag_r, (*outMag).imageData, mag_b, mag_g, mag_r, BW);
-   
-   swap_quadrants_gray_image((*outMag).imageData);
-   swap_quadrants_gray_image((*outPhase).imageData);
-
    // free memory
    fftw_destroy_plan(plan_b);
    if (!BW) {
@@ -481,12 +497,12 @@ int main(int argc, char** argv)
    int lineWidth = 1;
    double max = 0, mag = 0;
    int i, j, k;
-   const char * path = "bw/gray.jpeg";
+   //const char * path = "bw/gray.jpeg";
    //const char * path = "grad.png";
    //const char * path = "color/lenna.jpg";
    //const char * path = "xadrez.png";
    //const char * path = "tel.jpg";
-   //const char * path = "telb.png";
+   const char * path = "bw/telb.png";
    //const char * path = "collor.jpg";
    //const char * path = "bw/tinyb.jpg";
    char BW = 1;
