@@ -19,10 +19,8 @@
 #include <opencv/highgui.h>
 #include <fftw3.h>
 
-
 int WIDTH, HEIGHT, DIM;
 const unsigned char MAXBGR = 255;
-
 
 unsigned char at_gray_pixel(char * d, int row, int col) {
    unsigned char r;
@@ -36,7 +34,7 @@ unsigned char at_gray_pixel(char * d, int row, int col) {
 void copy_to_complex(fftw_complex * in_complex_b, fftw_complex * in_complex_g, fftw_complex * in_complex_r, char * data, char BW) {
    int i, j, DEBUG;
    
-   DEBUG = 1;
+   DEBUG = 0;
    
    j = 0;
    for (i = 0; i < WIDTH * HEIGHT * 2; i++) {
@@ -411,7 +409,7 @@ void fft(IplImage * image_in, IplImage * outMag,
    }
 }
 
-
+/*
 double* conv2_(double* d, double* kernel, double* result)
 {
     register double acc;
@@ -457,7 +455,7 @@ void sobel_kernel(char * data, char isHorizontal)
    
    cvFilter2D(data, data_out, );
 }
-
+*/
 
 void print(char * d) {
    int i, j;
@@ -483,9 +481,9 @@ int main(int argc, char** argv)
    int lineWidth = 1;
    double max = 0, mag = 0;
    int i, j, k;
-   //const char * path = "bw/gray.jpeg";
+   const char * path = "bw/gray.jpeg";
    //const char * path = "grad.png";
-   const char * path = "color/lenna.jpg";
+   //const char * path = "color/lenna.jpg";
    //const char * path = "xadrez.png";
    //const char * path = "tel.jpg";
    //const char * path = "telb.png";
@@ -505,7 +503,7 @@ int main(int argc, char** argv)
    HEIGHT = image_in->height;
    DIM    = image_in->nChannels;
    
-   print(image_in->imageData);
+   //print(image_in->imageData);
 
    image_mag = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
    image_phase = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
