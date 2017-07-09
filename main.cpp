@@ -67,28 +67,28 @@ void realImaginary_to_magPhase(fftw_complex * in_complex_b, fftw_complex * in_co
 	}
 }
 
-
 /*
  * \todo procedure that converts only gray images. Do for color too.
  */
 void magPhase_to_realImaginary(fftw_complex * in_complex_b, fftw_complex * in_complex_g,
-		  fftw_complex * in_complex_r, char * mag, char * phase, char BW){
+		  fftw_complex * in_complex_r, char * mag, char * phase, char BW)
+{
 	int i;
-	
+
 	double mag_b, phase_b;
-	
-	for(i = 0; i < WIDTH * HEIGHT; i++) {
-        mag_b   = mag[i * 3];
-        phase_b = ((phase[i * 3] / (double) MAXBGR) * 2 * M_PI) - M_PI;
-        in_complex_b[i][0] = (mag_b * cos(phase_b));
-        in_complex_b[i][1] = (mag_b * sin(phase_b));
-         
-		  /*
-        double magG = mag[i].green;
-        double phaseG = ((phase[i].green / (double)MAXBGR) * 2 * M_PI) - M_PI;
-        inG[i][0] = (magG * cos(phaseG));
-        inG[i][1] = (magG * sin(phaseG));*/
-    }
+
+	for (i = 0; i < WIDTH * HEIGHT; i++) {
+		mag_b = mag[i * 3];
+		phase_b = ((phase[i * 3] / (double) MAXBGR) * 2 * M_PI) - M_PI;
+		in_complex_b[i][0] = (mag_b * cos(phase_b));
+		in_complex_b[i][1] = (mag_b * sin(phase_b));
+
+		/*
+		double magG = mag[i].green;
+		double phaseG = ((phase[i].green / (double)MAXBGR) * 2 * M_PI) - M_PI;
+		inG[i][0] = (magG * cos(phaseG));
+		inG[i][1] = (magG * sin(phaseG));*/
+	}
 }
 
 void get_real_and_complex(double * r_b, double * i_b, double * r_g, double * i_g, double * r_r, double * i_r, fftw_complex out_complex_b, fftw_complex out_complex_g, fftw_complex out_complex_r, char method, char BW)
@@ -333,7 +333,7 @@ void swap_quadrants_gray_image(char * pixels)
  * Procedure that generates a spectrum of the complex array calculated by
  * Fourier Transform.
  */
-void generate_spectrum(fftw_complex * out_complex_b, fftw_complex * out_complex_g,
+void complex_to_spectrum(fftw_complex * out_complex_b, fftw_complex * out_complex_g,
 		  fftw_complex * out_complex_r, IplImage out_mag, IplImage out_phase, char BW)
 {
 	double real_r = 0, imag_r = 0,
@@ -351,7 +351,7 @@ void generate_spectrum(fftw_complex * out_complex_b, fftw_complex * out_complex_
 
 		if (DEBUG) printf("i:%5d:%5d", i, WIDTH * HEIGHT);
 
-		get_real_and_complex(&real_b, &imag_b, &real_g, &imag_g, &real_r, 
+		get_real_and_complex(&real_b, &imag_b, &real_g, &imag_g, &real_r,
 				  &imag_r, out_complex_b[i], out_complex_g[i], out_complex_r[i], 0, BW);
 
 		// Calcule the magnitude
@@ -399,6 +399,29 @@ void generate_spectrum(fftw_complex * out_complex_b, fftw_complex * out_complex_
 
 	swap_quadrants_gray_image(out_mag.imageData);
 	swap_quadrants_gray_image(out_phase.imageData);
+}
+
+void complex_to_image(fftw_complex * in_mag_b, fftw_complex * in_mag_g, fftw_complex * in_mag_r, char * data, char BW)
+{
+	double magR, magG, magB;
+	
+	// save real parts to output
+	for (int i = 0; i < WIDTH * HEIGHT; i++) {
+		magB = in_mag_b[i][0];
+		magG = in_mag_g[i][0];
+		magR = in_mag_r[i][0];
+
+		// make sure it's capped at MAXBGR
+		data[i * 3 + 0] = magR > MAXBGR ? MAXBGR : magR;
+
+		if (!BW) {
+			data[i * 3 + 1] = magG > MAXBGR ? MAXBGR : magG;
+			data[i * 3 + 2] = magB > MAXBGR ? MAXBGR : magB;
+		} else {
+			data[i * 3 + 1] = data[i * 3 + 0];
+			data[i * 3 + 2] = data[i * 3 + 0];
+		}
+	}
 }
 
 /*
@@ -456,7 +479,8 @@ void fft(IplImage * ipl_image_in, IplImage * ipl_mag_out,
 		fftw_execute(plan_r);
 	}
 
-	//generate_spectrum();
+	complex_to_spectrum(out_complex_b, out_complex_g, out_complex_r,
+			  * ipl_mag_out, * ipl_phase_out, BW);
 
 	// free memory
 	fftw_destroy_plan(plan_b);
@@ -478,20 +502,18 @@ void fft(IplImage * ipl_image_in, IplImage * ipl_mag_out,
 /*
  * FFTW function for the IplImage.
  */
-void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in, 
+void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 		  IplImage * ipl_image_out, IplImage * outSpectrum, char BW)
-{	
+{
 	int i = 0, j = 0, k = 0;
 	fftw_plan plan_r, plan_g, plan_b;
 	fftw_complex * in_complex_r = 0, * in_complex_g = 0, * in_complex_b = 0,
 			  * out_complex_r = 0, * out_complex_g = 0, * out_complex_b = 0;
 	unsigned char DEBUG = 1;
 
-	
-	
 	swap_quadrants_gray_image((*ipl_mag_in).imageData);
 	swap_quadrants_gray_image((*ipl_phase_in).imageData);
-	
+
 	// Allocate the input complex arrays 
 	printf("Creating the Complex Vectors\n");
 
@@ -518,10 +540,10 @@ void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 	}
 
 	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
-	j = 0;
 	printf("Coping the datas of image\n");
 
-	//realImaginary_to_magPhase(in_complex_b, in_complex_g, in_complex_r, (*i).imageData, BW);
+	magPhase_to_realImaginary(in_complex_b, in_complex_g, in_complex_r,
+			  ipl_mag_in->imageData, ipl_phase_in->imageData, BW);
 
 	printf("Executing the FFTW\n");
 	// Execute the forward FFT
@@ -532,7 +554,7 @@ void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 		fftw_execute(plan_r);
 	}
 
-	//generate_spectrum();
+	complex_to_image(out_complex_b, out_complex_g, out_complex_r, ipl_mag_in->imageData, BW);
 
 	// free memory
 	fftw_destroy_plan(plan_b);
@@ -550,7 +572,6 @@ void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 		fftw_free(out_complex_r);
 	}
 }
-
 
 /*
 double* conv2_(double* d, double* kernel, double* result)
