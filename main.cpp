@@ -432,7 +432,6 @@ void complex_to_image(fftw_complex * in_mag_b, fftw_complex * in_mag_g, fftw_com
 void fft(IplImage * ipl_image_in, IplImage * ipl_mag_out,
 		  IplImage * ipl_phase_out, IplImage * outSpectrum, char BW)
 {
-
 	int i = 0, j = 0, k = 0;
 	fftw_plan plan_r, plan_g, plan_b;
 	fftw_complex * in_complex_r = 0, * in_complex_g = 0, * in_complex_b = 0,
@@ -514,6 +513,7 @@ void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 	swap_quadrants_gray_image((*ipl_mag_in).imageData);
 	swap_quadrants_gray_image((*ipl_phase_in).imageData);
 
+	
 	// Allocate the input complex arrays 
 	printf("Creating the Complex Vectors\n");
 
@@ -538,6 +538,7 @@ void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 		plan_g = fftw_plan_dft_2d(WIDTH, HEIGHT, in_complex_g, out_complex_g, FFTW_FORWARD, FFTW_PATIENT);
 		plan_r = fftw_plan_dft_2d(WIDTH, HEIGHT, in_complex_r, out_complex_r, FFTW_FORWARD, FFTW_PATIENT);
 	}
+	
 
 	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
 	printf("Coping the datas of image\n");
@@ -554,7 +555,8 @@ void ifft(IplImage * ipl_mag_in, IplImage * ipl_phase_in,
 		fftw_execute(plan_r);
 	}
 
-	complex_to_image(out_complex_b, out_complex_g, out_complex_r, ipl_mag_in->imageData, BW);
+	
+	complex_to_image(out_complex_b, out_complex_g, out_complex_r, ipl_image_out->imageData, BW);
 
 	// free memory
 	fftw_destroy_plan(plan_b);
