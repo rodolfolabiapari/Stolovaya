@@ -69,42 +69,33 @@ void sobel_kernel(char * data, char isHorizontal)
 }
  */
 
+
+void print_complex(fftw_complex * c, int WIDTH, int HEIGHT) 
+{
+	int i;
+	
+	for (i = 0; i < WIDTH * HEIGHT; i++) {
+		printf("%5d(%8.1f, %8.1f)  \n",i, c[i][0], c[i][1]);
+		fflush(stdout);
+	}
+}
+
+
 void print(char * d, int WIDTH, int HEIGHT)
 {
-   int i, j;
+	int i, j;
 
-   for (i = 0; i < HEIGHT + 10; i++) {
-      printf("%d:  ", i + 1);
-      for (j = 0; j < WIDTH; j++) {
-	 printf("%3d ", (int) (unsigned char) d[i * 3 * WIDTH + j * 3]);
-      }
-      printf("\n");
-   }
+	for (i = 0; i < HEIGHT + 10; i++) {
+		printf("%d:  ", i + 1);
+		for (j = 0; j < WIDTH; j++) {
+			printf("%3d ", (int) (unsigned char) d[i * 3 * WIDTH + j * 3]);
+		}
+		printf("\n");
+	}
 
-   exit(-1);
+	exit(-1);
 }
 
-void defines_plan(char isFORWARD, fftw_complex * fft_complex_outside, fftw_complex * fft_complex_inside,
-	fftw_plan * plan, int WIDTH, int HEIGHT)
-{
-   
-   if (* plan) {
-	 
-      // free memory
-      fftw_destroy_plan(* plan);
-   }
-      
-   if (isFORWARD) {
-      * plan = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_outside, fft_complex_inside,
-	      FFTW_FORWARD, FFTW_PATIENT);
-
-
-   } else {
-      * plan = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_inside, fft_complex_outside,
-	      FFTW_BACKWARD, FFTW_PATIENT);
-
-   }
-}
 
 /*
  * Procedure that allocates space to future process.
@@ -116,25 +107,25 @@ void defines_plan(char isFORWARD, fftw_complex * fft_complex_outside, fftw_compl
  */
 void create_fftw_complex(fftw_complex ** f, int WIDTH, int HEIGHT)
 {
-   if (! *f) {
-      *f = (fftw_complex*) fftw_malloc(sizeof (fftw_complex) * WIDTH * HEIGHT);
-   }
+	if (! *f) {
+		*f = (fftw_complex*) fftw_malloc(sizeof (fftw_complex) * WIDTH * HEIGHT);
+	}
 }
 
 void initialize_fftw(fftw_complex ** fft_complex_outside, fftw_complex ** fft_complex_inside, int WIDTH, int HEIGHT)
 {
-   // Allocate the input complex arrays 
-   printf("\tCreating the Complex Vectors\n");
+	// Allocate the input complex arrays 
+	printf("\tCreating the Complex Vectors\n");
 
-   create_fftw_complex(fft_complex_outside, WIDTH, HEIGHT);
-   create_fftw_complex(fft_complex_inside, WIDTH, HEIGHT);
+	create_fftw_complex(fft_complex_outside, WIDTH, HEIGHT);
+	create_fftw_complex(fft_complex_inside, WIDTH, HEIGHT);
 }
 
 unsigned char at_gray_pixel(char * d, int row, int col, int WIDTH, int HEIGHT)
 {
-   unsigned char r = d[row * 3 * WIDTH + col * 3];
+	unsigned char r = d[row * 3 * WIDTH + col * 3];
 
-   return r;
+	return r;
 }
 
 /*
@@ -147,39 +138,39 @@ unsigned char at_gray_pixel(char * d, int row, int col, int WIDTH, int HEIGHT)
  */
 void ipl_to_complex(fftw_complex * complex_fft, char * data, int WIDTH, int HEIGHT)
 {
-   int i, j, DEBUG;
+	int i, j, DEBUG;
 
-   DEBUG = 0;
+	DEBUG = 0;
 
-   j = 0;
-   for (i = 0; i < WIDTH * HEIGHT; i++) {
+	j = 0;
+	for (i = 0; i < WIDTH * HEIGHT; i++) {
 
-      complex_fft[i][0] = (unsigned char) data[j];
+		complex_fft[i][0] = (unsigned char) data[j];
 
-      if (DEBUG) printf("%6d:%d\t%f\n", i, WIDTH * HEIGHT, complex_fft[i][0]);
-      
-      j += 3;
-   }
+		if (DEBUG) printf("%6d:%d\t%f\n", i, WIDTH * HEIGHT, complex_fft[i][0]);
+
+		j += 3;
+	}
 }
 
 void complex_to_ipl(fftw_complex * fft_complex_outside, char * data, int WIDTH, int HEIGHT, int DIM)
 {
-   int i, j, DEBUG;
+	int i, j, DEBUG;
 
-   DEBUG = 1;
+	DEBUG = 1;
 
-   j = 0;
-   for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
+	j = 0;
+	for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
 
-      data[i + 0] = (unsigned char) fft_complex_outside[j][0];
+		data[i + 0] = (unsigned char) fft_complex_outside[j][0];
 
-      if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0],  fft_complex_outside[j][1]);
+		if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0], fft_complex_outside[j][1]);
 
-      data[i + 1] = data[i];
-      data[i + 2] = data[i];
-      
-      j++;
-   }
+		data[i + 1] = data[i];
+		data[i + 2] = data[i];
+
+		j++;
+	}
 }
 
 /*
@@ -187,101 +178,89 @@ void complex_to_ipl(fftw_complex * fft_complex_outside, char * data, int WIDTH, 
  */
 void complex_to_magPhase(fftw_complex * fft_complex_outside, char * mag, char * phase, int WIDTH, int HEIGHT)
 {
-   int i;
+	int i;
 
-   double mag_b, phase_b;
+	double mag_b, phase_b;
 
-   for (i = 0; i < WIDTH * HEIGHT; i++) {
-      mag_b = mag[i * 3];
-      phase_b = ((phase[i * 3] / (double) MAXBGR) * 2 * M_PI) - M_PI;
-      fft_complex_outside[i][0] = (mag_b * cos(phase_b));
-      fft_complex_outside[i][1] = (mag_b * sin(phase_b));
-   }
+	for (i = 0; i < WIDTH * HEIGHT; i++) {
+		mag_b = mag[i * 3];
+		phase_b = ((phase[i * 3] / (double) MAXBGR) * 2 * M_PI) - M_PI;
+		fft_complex_outside[i][0] = (mag_b * cos(phase_b));
+		fft_complex_outside[i][1] = (mag_b * sin(phase_b));
+	}
 }
 
-void get_real_and_complex(fftw_complex * fft_complex_outside, fftw_complex * fft_complex_inside, 
-	int position, double * r, double * i, double * r_g,
-	double * i, char method, char isIn, int WIDTH, int HEIGHT)
+void get_real_and_complex(fftw_complex * fft_complex_outside, fftw_complex * fft_complex_inside,
+		  int position, double * r, double * i, char method, char isIn, int WIDTH, int HEIGHT)
 {
+	if (isIn) {
 
-   if (isIn) {
+		if (method) {
+			// Normalize values
+			*r = fft_complex_inside[position * 3 + 0][0] / (double) (WIDTH * HEIGHT);
+			*i = fft_complex_inside[position * 3 + 0][1] / (double) (WIDTH * HEIGHT);
 
-      if (method) {
-	 // Normalize values
-	 *r = fft_complex_inside[position * 3 + 0][0] / (double) (WIDTH * HEIGHT);
-	 *i = fft_complex_inside[position * 3 + 0][1] / (double) (WIDTH * HEIGHT);
+		} else {
+			// Normalize values
+			*r = fft_complex_inside[position * 3 + 0][0];
+			*i = fft_complex_inside[position * 3 + 0][1];
+		}
 
-      } else {
-	 // Normalize values
-	 *r = fft_complex_inside[position * 3 + 0][0];
-	 *i = fft_complex_inside[position * 3 + 0][1];
-      }
+	} else {
+		if (method) {
+			// Normalize values
+			*r = fft_complex_outside[position * 3 + 0][0] / (double) (WIDTH * HEIGHT);
+			*i = fft_complex_outside[position * 3 + 0][1] / (double) (WIDTH * HEIGHT);
 
-   } else {
-      if (method) {
-	 // Normalize values
-	 *r = fft_complex_outside[position * 3 + 0][0] / (double) (WIDTH * HEIGHT);
-	 *i = fft_complex_outside[position * 3 + 0][1] / (double) (WIDTH * HEIGHT);
-
-      } else {
-	 // Normalize values
-	 *r = fft_complex_outside[position * 3 + 0][0];
-	 *i = fft_complex_outside[position * 3 + 0][1];
-      }
-   }
+		} else {
+			// Normalize values
+			*r = fft_complex_outside[position * 3 + 0][0];
+			*i = fft_complex_outside[position * 3 + 0][1];
+		}
+	}
 }
 
-void calcule_phase(int pos, double r, double i, char * data)
+void phase_to_ipl(int pos, double r, double i, char * data)
 {
-   double _Complex complex_b, complex_g, complex_r;
-   unsigned char buffer_uc = 0;
-   double phase_r = 0, phase_g = 0, phase_b = 0;
-   char DEBUG = 0;
+	double _Complex complex;
+	unsigned char buffer_uc = 0;
+	double phase_r = 0, phase_g = 0, phase_b = 0;
+	char DEBUG = 0;
 
-   // Calcule the phase
-   complex_b = r + i * _Complex_I;
+	// Calcule the phase
+	complex = r + i * _Complex_I;
 
-   phase_b = carg(complex_b) + M_PI;
+	phase_b = carg(complex) + M_PI;
 
-   // scale and write to output
-   data[pos * 3 + 0] = (unsigned char) (int) (MAXBGR * (phase_b / (double) (2 * M_PI)));
+	// scale and write to output
+	data[pos * 3 + 0] = (unsigned char) (int) (MAXBGR * (phase_b / (double) (2 * M_PI)));
 
-   if (DEBUG) printf("  |  Ph %d", (unsigned char) data[pos * 3 + 0]);
+	if (DEBUG) printf("  |  Ph %d", (unsigned char) data[pos * 3 + 0]);
 
-   if (!isGray) {
-      data[pos * 3 + 1] = (unsigned char) (int) (MAXBGR * (phase_g / (double) (2 * M_PI)));
-      data[pos * 3 + 2] = (unsigned char) (int) (MAXBGR * (phase_r / (double) (2 * M_PI)));
+	data[pos * 3 + 1] = data[pos * 3 + 0];
+	data[pos * 3 + 2] = data[pos * 3 + 0];
 
-      if (DEBUG) printf(" %d %d", (unsigned char) data[pos * 3 + 1], (unsigned char) data[pos * 3 + 2]);
-
-   } else {
-      buffer_uc = (unsigned char) (int) (MAXBGR * (phase_b / (double) (2 * M_PI)));
-
-      data[pos * 3 + 1] = buffer_uc;
-      data[pos * 3 + 2] = buffer_uc;
-   }
-
-   if (DEBUG) printf("\n");
+	if (DEBUG) printf("\n");
 }
 
 void swap_pixels(char * base_position, int upper_offset, int lower_offset)
 {
-   char buffer;
+	char buffer;
 
-   //B
-   buffer = *(base_position + upper_offset + 0);
-   *(base_position + upper_offset + 0) = *(base_position + lower_offset + 0);
-   *(base_position + lower_offset + 0) = buffer;
+	//B
+	buffer = *(base_position + upper_offset + 0);
+	*(base_position + upper_offset + 0) = *(base_position + lower_offset + 0);
+	*(base_position + lower_offset + 0) = buffer;
 
-   //G
-   buffer = *(base_position + upper_offset + 1);
-   *(base_position + upper_offset + 1) = *(base_position + lower_offset + 1);
-   *(base_position + lower_offset + 1) = buffer;
+	//G
+	buffer = *(base_position + upper_offset + 1);
+	*(base_position + upper_offset + 1) = *(base_position + lower_offset + 1);
+	*(base_position + lower_offset + 1) = buffer;
 
-   //R
-   buffer = *(base_position + upper_offset + 2);
-   *(base_position + upper_offset + 2) = *(base_position + lower_offset + 2);
-   *(base_position + lower_offset + 2) = buffer;
+	//R
+	buffer = *(base_position + upper_offset + 2);
+	*(base_position + upper_offset + 2) = *(base_position + lower_offset + 2);
+	*(base_position + lower_offset + 2) = buffer;
 }
 
 /*
@@ -291,86 +270,86 @@ void swap_pixels(char * base_position, int upper_offset, int lower_offset)
  */
 void swap_quadrants_gray_image(char * pixels, int WIDTH, int HEIGHT)
 {
-   int full_col, full_row, half_col, half_row;
-   int upper_offset, lower_offset, row, col;
+	int full_col, full_row, half_col, half_row;
+	int upper_offset, lower_offset, row, col;
 
-   full_col = WIDTH;
-   full_row = HEIGHT;
+	full_col = WIDTH;
+	full_row = HEIGHT;
 
-   half_col = floor(full_col * 3 / (double) 2);
-   half_row = floor(full_row * 3 / (double) 2);
+	half_col = floor(full_col * 3 / (double) 2);
+	half_row = floor(full_row * 3 / (double) 2);
 
-   // swap quadrants diagonally
-   for (row = 0; row < half_row; row += 3) {
-      for (col = 0; col < half_col; col += 3) {
-	 // Position of Second and First Quadrants.
-	 upper_offset = col + (full_col * row);
-	 // Position of Third and Fourth Quadrants
-	 lower_offset = upper_offset + // Current Position
-		 half_col + // Jump to next Quadrants
-		 (full_col * half_row);
+	// swap quadrants diagonally
+	for (row = 0; row < half_row; row += 3) {
+		for (col = 0; col < half_col; col += 3) {
+			// Position of Second and First Quadrants.
+			upper_offset = col + (full_col * row);
+			// Position of Third and Fourth Quadrants
+			lower_offset = upper_offset + // Current Position
+					  half_col + // Jump to next Quadrants
+					  (full_col * half_row);
 
-	 swap_pixels(pixels, upper_offset, lower_offset);
+			swap_pixels(pixels, upper_offset, lower_offset);
 
-	 swap_pixels(pixels, upper_offset + half_col, lower_offset - half_col);
+			swap_pixels(pixels, upper_offset + half_col, lower_offset - half_col);
 
-	 /*buffer1 = *(pixels + upper_offset + 0);
-	  *(pixels + upper_offset + 0) = *(pixels + lower_offset + 0);
-	  *(pixels + lower_offset + 0) = buffer1;
-	  */
-	 /*buffer1 = *(pixels + upper_offset + 1);
-	  *(pixels + upper_offset + 1) = *(pixels + lower_offset + 1);
-	  *(pixels + lower_offset + 1) = buffer1;
+			/*buffer1 = *(pixels + upper_offset + 0);
+			 *(pixels + upper_offset + 0) = *(pixels + lower_offset + 0);
+			 *(pixels + lower_offset + 0) = buffer1;
+			 */
+			/*buffer1 = *(pixels + upper_offset + 1);
+			 *(pixels + upper_offset + 1) = *(pixels + lower_offset + 1);
+			 *(pixels + lower_offset + 1) = buffer1;
 
-	 buffer1 = *(pixels + upper_offset + 2);
-	  *(pixels + upper_offset + 2) = *(pixels + lower_offset + 2);
-	  *(pixels + lower_offset + 2) = buffer1;
-	  */
+			buffer1 = *(pixels + upper_offset + 2);
+			 *(pixels + upper_offset + 2) = *(pixels + lower_offset + 2);
+			 *(pixels + lower_offset + 2) = buffer1;
+			 */
 
 
-	 /*buffer2 = *(pixels + upper_offset + half_col);
-	  *(pixels + upper_offset + half_col) = *(pixels + lower_offset - half_col);
-	  *(pixels + lower_offset - half_col) = buffer2;
-	  */
-	 /*buffer2 = *(pixels + upper + half_col);
-	  *(pixels + upper + half_col) = *(pixels + lower - half_col);
-	  *(pixels + lower - half_col) = buffer2;*/
-      }
-   }
+			/*buffer2 = *(pixels + upper_offset + half_col);
+			 *(pixels + upper_offset + half_col) = *(pixels + lower_offset - half_col);
+			 *(pixels + lower_offset - half_col) = buffer2;
+			 */
+			/*buffer2 = *(pixels + upper + half_col);
+			 *(pixels + upper + half_col) = *(pixels + lower - half_col);
+			 *(pixels + lower - half_col) = buffer2;*/
+		}
+	}
 }
 
 void swap_fftw_pixels(fftw_complex * base_position, int upper_offset, int lower_offset)
 {
-   fftw_complex buffer;
+	fftw_complex buffer;
 
-   //B
-   buffer[0] = base_position[upper_offset + 0][0];
-   base_position[upper_offset + 0][0] = base_position[lower_offset + 0][0];
-   base_position[lower_offset + 0][0] = buffer[0];
+	//B
+	buffer[0] = base_position[upper_offset + 0][0];
+	base_position[upper_offset + 0][0] = base_position[lower_offset + 0][0];
+	base_position[lower_offset + 0][0] = buffer[0];
 
-   buffer[1] = base_position[upper_offset + 0][1];
-   base_position[upper_offset + 0][1] = base_position[lower_offset + 0][1];
-   base_position[lower_offset + 0][1] = buffer[1];
-
-
-   //G
-   buffer[0] = base_position[upper_offset + 1][0];
-   base_position[upper_offset + 1][0] = base_position[lower_offset + 1][0];
-   base_position[lower_offset + 1][0] = buffer[0];
-
-   buffer[1] = base_position[upper_offset + 1][1];
-   base_position[upper_offset + 1][1] = base_position[lower_offset + 1][1];
-   base_position[lower_offset + 1][1] = buffer[1];
+	buffer[1] = base_position[upper_offset + 0][1];
+	base_position[upper_offset + 0][1] = base_position[lower_offset + 0][1];
+	base_position[lower_offset + 0][1] = buffer[1];
 
 
-   //R
-   buffer[0] = base_position[upper_offset + 2][0];
-   base_position[upper_offset + 2][0] = base_position[lower_offset + 2][0];
-   base_position[lower_offset + 2][0] = buffer[0];
+	//G
+	buffer[0] = base_position[upper_offset + 1][0];
+	base_position[upper_offset + 1][0] = base_position[lower_offset + 1][0];
+	base_position[lower_offset + 1][0] = buffer[0];
 
-   buffer[1] = base_position[upper_offset + 2][1];
-   base_position[upper_offset + 2][1] = base_position[lower_offset + 2][1];
-   base_position[lower_offset + 2][1] = buffer[1];
+	buffer[1] = base_position[upper_offset + 1][1];
+	base_position[upper_offset + 1][1] = base_position[lower_offset + 1][1];
+	base_position[lower_offset + 1][1] = buffer[1];
+
+
+	//R
+	buffer[0] = base_position[upper_offset + 2][0];
+	base_position[upper_offset + 2][0] = base_position[lower_offset + 2][0];
+	base_position[lower_offset + 2][0] = buffer[0];
+
+	buffer[1] = base_position[upper_offset + 2][1];
+	base_position[upper_offset + 2][1] = base_position[lower_offset + 2][1];
+	base_position[lower_offset + 2][1] = buffer[1];
 }
 
 /*
@@ -380,139 +359,113 @@ void swap_fftw_pixels(fftw_complex * base_position, int upper_offset, int lower_
  */
 void swap_quadrants_gray_fftw(fftw_complex * complex, int WIDTH, int HEIGHT)
 {
-   int full_col, full_row, half_col, half_row;
-   int upper_offset, lower_offset, row, col;
+	int full_col, full_row, half_col, half_row;
+	int upper_offset, lower_offset, row, col;
 
-   full_col = WIDTH;
-   full_row = HEIGHT;
+	full_col = WIDTH;
+	full_row = HEIGHT;
 
-   half_col = floor(full_col / (double) 2);
-   half_row = floor(full_row / (double) 2);
+	half_col = floor(full_col / (double) 2);
+	half_row = floor(full_row / (double) 2);
 
-   // swap quadrants diagonally
-   for (row = 0; row < half_row; row++) {
-      for (col = 0; col < half_col; col++) {
-	 // Position of Second and First Quadrants.
-	 upper_offset = col + (full_col * row);
-	 // Position of Third and Fourth Quadrants
-	 lower_offset = upper_offset + // Current Position
-		 half_col + // Jump to next Quadrants
-		 (full_col * half_row);
+	// swap quadrants diagonally
+	for (row = 0; row < half_row; row++) {
+		for (col = 0; col < half_col; col++) {
+			// Position of Second and First Quadrants.
+			upper_offset = col + (full_col * row);
+			// Position of Third and Fourth Quadrants
+			lower_offset = upper_offset + // Current Position
+					  half_col + // Jump to next Quadrants
+					  (full_col * half_row);
 
-	 swap_fftw_pixels(complex, upper_offset, lower_offset);
+			swap_fftw_pixels(complex, upper_offset, lower_offset);
 
-	 swap_fftw_pixels(complex, upper_offset + half_col, lower_offset - half_col);
+			swap_fftw_pixels(complex, upper_offset + half_col, lower_offset - half_col);
 
-	 /*buffer1 = *(pixels + upper_offset + 0);
-	  *(pixels + upper_offset + 0) = *(pixels + lower_offset + 0);
-	  *(pixels + lower_offset + 0) = buffer1;
-	  */
-	 /*buffer1 = *(pixels + upper_offset + 1);
-	  *(pixels + upper_offset + 1) = *(pixels + lower_offset + 1);
-	  *(pixels + lower_offset + 1) = buffer1;
+			/*buffer1 = *(pixels + upper_offset + 0);
+			 *(pixels + upper_offset + 0) = *(pixels + lower_offset + 0);
+			 *(pixels + lower_offset + 0) = buffer1;
+			 */
+			/*buffer1 = *(pixels + upper_offset + 1);
+			 *(pixels + upper_offset + 1) = *(pixels + lower_offset + 1);
+			 *(pixels + lower_offset + 1) = buffer1;
 
-	 buffer1 = *(pixels + upper_offset + 2);
-	  *(pixels + upper_offset + 2) = *(pixels + lower_offset + 2);
-	  *(pixels + lower_offset + 2) = buffer1;
-	  */
+			buffer1 = *(pixels + upper_offset + 2);
+			 *(pixels + upper_offset + 2) = *(pixels + lower_offset + 2);
+			 *(pixels + lower_offset + 2) = buffer1;
+			 */
 
 
-	 /*buffer2 = *(pixels + upper_offset + half_col);
-	  *(pixels + upper_offset + half_col) = *(pixels + lower_offset - half_col);
-	  *(pixels + lower_offset - half_col) = buffer2;
-	  */
-	 /*buffer2 = *(pixels + upper + half_col);
-	  *(pixels + upper + half_col) = *(pixels + lower - half_col);
-	  *(pixels + lower - half_col) = buffer2;*/
-      }
-   }
+			/*buffer2 = *(pixels + upper_offset + half_col);
+			 *(pixels + upper_offset + half_col) = *(pixels + lower_offset - half_col);
+			 *(pixels + lower_offset - half_col) = buffer2;
+			 */
+			/*buffer2 = *(pixels + upper + half_col);
+			 *(pixels + upper + half_col) = *(pixels + lower - half_col);
+			 *(pixels + lower - half_col) = buffer2;*/
+		}
+	}
 }
 
 double normalize_interval(double x, double max, double min)
 {
-   double scale, new_value;
+	double scale, new_value;
 
-   scale = (x - min) / (max - min);
+	scale = (x - min) / (max - min);
 
-   new_value = (max * scale);
+	new_value = (max * scale);
 
-   return new_value;
+	return new_value;
 }
 
 void magnitude_pixel_logarithm(double max_b, double max_g, double max_r,
-	double min_b, double min_g, double min_r,
-	char * data, double * b, double * g, double * r, int WIDTH, int HEIGHT, int DIM)
+		  double min_b, double min_g, double min_r,
+		  char * data, double * b, double * g, double * r, int WIDTH, int HEIGHT, int DIM)
 {
-   double c_b, c_g, c_r;
-   int i, j;
-   char DEBUG = 0;
+	double c;
+	int i, j;
+	char DEBUG = 0;
 
-   c_b = 255 / (log(1 + max_b));
+	c = 255 / (log(1 + max_b));
 
-   if (!isGray) {
-      c_g = 255 / (log(1 + max_g));
-      c_r = 255 / (log(1 + max_r));
-   }
+	if (min_b == 0) {
+		if (DEBUG) printf("%f\n", log(1 + max_b));
+		if (DEBUG) printf("%f\n-\n", 255 / log(1 + max_b));
 
-   if (min_b == 0) {
-      if (DEBUG) printf("%f\n", log(1 + max_b));
-      if (DEBUG) printf("%f\n-\n", 255 / log(1 + max_b));
+		j = 0;
+		for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
 
-      j = 0;
-      for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
+			data[i + 0] = c * log(1 + b[j]);
 
-	 if (!isGray) {
-	    data[i + 0] = c_b * log(1 + b[j]);
-	    data[i + 1] = c_g * log(1 + g[j]);
-	    data[i + 2] = c_r * log(1 + r[j]);
+			if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + b[j]), c * log(1 + b[j]));
 
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + b[j]), c_b * log(1 + b[j]));
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + b[j]), c_g * log(1 + g[j]));
-	    if (DEBUG) printf("(%08.3f, %08.3f)", log(1 + b[j]), c_r * log(1 + r[j]));
+			data[i + 1] = data[i];
+			data[i + 2] = data[i];
 
-	 } else {
-	    data[i + 0] = c_b * log(1 + b[j]);
 
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + b[j]), c_b * log(1 + b[j]));
+			if (DEBUG) printf("\n");
+			j++;
 
-	    data[i + 1] = data[i];
-	    data[i + 2] = data[i];
-	 }
+		}
+	} else {
 
-	 if (DEBUG) printf("\n");
-	 j++;
+		//if (DEBUG)  printf("%f\n", log(1 + max_b));
+		//if (DEBUG)  printf("%f\n-\n", 255 / log(1 + max_b));
 
-      }
-   } else {
+		j = 0;
+		for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
 
-      //if (DEBUG)  printf("%f\n", log(1 + max_b));
-      //if (DEBUG)  printf("%f\n-\n", 255 / log(1 + max_b));
+			data[i + 0] = c * log(1 + normalize_interval(b[j], max_b, min_b));
 
-      j = 0;
-      for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
+			if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + normalize_interval(b[j], max_b, min_b)), c * log(1 + normalize_interval(b[j], max_b, min_b)));
 
-	 if (!isGray) {
-	    data[i + 0] = c_b * log(1 + normalize_interval(b[j], max_b, min_b));
-	    data[i + 1] = c_g * log(1 + normalize_interval(g[j], max_g, min_g));
-	    data[i + 2] = c_r * log(1 + normalize_interval(r[j], max_r, min_r));
+			data[i + 1] = data[i];
+			data[i + 2] = data[i];
 
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + normalize_interval(b[j], max_b, min_b)), c_b * log(1 + normalize_interval(b[j], max_b, min_b)));
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + normalize_interval(g[j], max_g, min_g)), c_g * log(1 + normalize_interval(g[j], max_g, min_g)));
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + normalize_interval(r[j], max_r, min_r)), c_r * log(1 + normalize_interval(r[j], max_r, min_r)));
-
-	 } else {
-	    data[i + 0] = c_b * log(1 + normalize_interval(b[j], max_b, min_b));
-
-	    if (DEBUG) printf("(%08.3f, %08.3f) ", log(1 + normalize_interval(b[j], max_b, min_b)), c_b * log(1 + normalize_interval(b[j], max_b, min_b)));
-
-	    data[i + 1] = data[i];
-	    data[i + 2] = data[i];
-	 }
-
-	 if (DEBUG) printf("\n");
-	 j++;
-      }
-   }
+			if (DEBUG) printf("\n");
+			j++;
+		}
+	}
 }
 
 /*
@@ -620,64 +573,82 @@ void complex_to_image(fftw_complex * in_mag_b, fftw_complex * in_mag_g, fftw_com
  * 
  * \todo torar o spectrum
  */
-void fft(fftw_complex * fft_complex_outside_b, fftw_complex * fft_complex_outside_g,
-	fftw_complex * fft_complex_outside_r, fftw_complex * fft_complex_inside_b, fftw_complex * fft_complex_inside_g,
-	fftw_complex * fft_complex_inside_r, IplImage * ipl_image_in,
-	fftw_plan * plan_b, fftw_plan * plan_g, fftw_plan * plan_r,
-	int WIDTH, int HEIGHT, int DIM)
+void fft(fftw_complex * fft_complex_before, fftw_complex * fft_complex_after, 
+		  IplImage * ipl_image_in, int WIDTH, int HEIGHT, int DIM)
 {
-   printf("Starting the FFTW\n");
+	fftw_plan plan;
+	
+	printf("Starting the FFTW\n");
 
+	
+	// create plans
+	printf("\tCreating the Plans for FORWARD\n");
+	
+	plan = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_before, fft_complex_after,
+			  FFTW_FORWARD, FFTW_PATIENT);
 
-   // Assign the values of image (BGR) to the real parts of the array (array[i][0])
-   printf("\tCoping the datas of image\n");
+	
+	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
+	printf("\tCoping the datas of image\n");
 
-   ipl_to_complex(fft_complex_outside_b, fft_complex_outside_g,
-	   fft_complex_outside_r, (*ipl_image_in).imageData, WIDTH, HEIGHT);
+	ipl_to_complex(fft_complex_before, (*ipl_image_in).imageData, WIDTH, HEIGHT);
 
+	
+	printf("\tExecuting the FFTW\n");
 
-   printf("\tExecuting the FFTW\n");
+	// Execute the forward FFT
+	fftw_execute(plan);
 
-   // Execute the forward FFT
-   fftw_execute(* plan_b);
+	fftw_destroy_plan(plan);	
+	
+	//fftw_cleanup();
 
-   if (!isGray) {
-      fftw_execute(* plan_g);
-      fftw_execute(* plan_r);
-   }
-
-   //fftw_cleanup();
-
-   //swap_quadrants_gray_fftw(fft_complex_inside_b, WIDTH, HEIGHT);
-
-
-   printf("Starting the IFFTW\n");
-
-
-   //swap_quadrants_gray_fftw(fft_complex_inside_b, WIDTH, HEIGHT);
-
-
-   // Assign the values of image (BGR) to the real parts of the array (array[i][0])
-   printf("\tCoping the datas of image\n");
-
-
-   defines_plan(0, fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r,
-	   fft_complex_inside_b, fft_complex_inside_g, fft_complex_inside_r, 
-	   plan_b, plan_g, plan_r, WIDTH, HEIGHT);
-
-   printf("\tExecuting the FFTW\n");
-   // Execute the forward FFT
-   fftw_execute(* plan_b);
-
-   if (!isGray) {
-      fftw_execute(* plan_g);
-      fftw_execute(* plan_r);
-   }
-
-   complex_to_ipl(fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r, ipl_image_in->imageData, WIDTH, HEIGHT, DIM);
-
-   fftw_cleanup();
+	//swap_quadrants_gray_fftw(fft_complex_inside_b, WIDTH, HEIGHT);	
 }
+
+
+void ifft(fftw_complex * fft_complex_after, IplImage * ipl_image_out, int WIDTH, int HEIGHT, int DIM) 
+{
+	printf("Starting the IFFTW\n");
+
+	fftw_plan plan;
+	fftw_complex * fft_complex_before_copy, * fft_complex_after_copy;
+	
+	initialize_fftw(& fft_complex_before_copy, & fft_complex_after_copy, WIDTH, HEIGHT);
+	
+
+	//swap_quadrants_gray_fftw(fft_complex_inside_b, WIDTH, HEIGHT);
+
+	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
+	printf("\tCoping the datas of image\n");
+
+	essa funcao ta avacalahndo tudo
+	//plan = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_before_copy, fft_complex_after_copy,
+	//		  FFTW_BACKWARD, FFTW_PATIENT);
+	
+	for (int i = 0; i < WIDTH * HEIGHT; i++) {
+		fft_complex_before_copy[i][0] = fft_complex_after[i][0];
+		fft_complex_before_copy[i][1] = fft_complex_after[i][1];
+	}
+	
+	print_complex(fft_complex_before_copy, WIDTH, HEIGHT);
+	 
+	
+	/*
+	printf("\tExecuting the FFTW\n");
+	// Execute the forward FFT
+	fftw_execute(* plan);
+
+	complex_to_ipl(fft_complex_outside, ipl_image_in->imageData, WIDTH, HEIGHT, DIM);
+
+	fftw_cleanup();
+	 */
+	
+	
+	fftw_destroy_plan(plan);	
+	
+}
+
 
 /*
  * FFTW function for the IplImage.
@@ -689,57 +660,57 @@ void ifft(fftw_complex * fft_complex_outside_b, fftw_complex * fft_complex_outsi
 	fftw_plan * plan_b, fftw_plan * plan_g, fftw_plan * plan_r, 
 	int WIDTH, int HEIGHT, int DIM)
 {
-   printf("Starting the IFFTW\n");
+	printf("Starting the IFFTW\n");
 
-   swap_quadrants_gray_fftw(fft_complex_inside_b, WIDTH, HEIGHT);
+	swap_quadrants_gray_fftw(fft_complex_inside_b, WIDTH, HEIGHT);
 
 
-   // Assign the values of image (BGR) to the real parts of the array (array[i][0])
-   printf("\tCoping the datas of image\n");
+	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
+	printf("\tCoping the datas of image\n");
 
    
-   if (!plan_b) {
+	if (!plan_b) {
  * plan_b = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_inside_b, fft_complex_outside_b,
-	      FFTW_BACKWARD, FFTW_PATIENT);
+			FFTW_BACKWARD, FFTW_PATIENT);
 
-      if (!isGray) {
+		if (!isGray) {
  * plan_g = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_inside_g, fft_complex_outside_g,
 		 FFTW_BACKWARD, FFTW_PATIENT);
  * plan_r = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_inside_r, fft_complex_outside_r,
 		 FFTW_BACKWARD, FFTW_PATIENT);
-      }
-   } else {
+		}
+	} else {
       
-      // free memory
-      fftw_destroy_plan(* plan_b);
-      if (!isGray) {
+		// free memory
+		fftw_destroy_plan(* plan_b);
+		if (!isGray) {
 	 fftw_destroy_plan(* plan_g);
 	 fftw_destroy_plan(* plan_r);
-      }
+		}
 
  * plan_b = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_outside_b, fft_complex_inside_b,
-	      FFTW_BACKWARD, FFTW_PATIENT);
+			FFTW_BACKWARD, FFTW_PATIENT);
 
-      if (!isGray) {
+		if (!isGray) {
  * plan_g = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_outside_g, fft_complex_inside_g,
 		 FFTW_BACKWARD, FFTW_PATIENT);
  * plan_r = fftw_plan_dft_2d(WIDTH, HEIGHT, fft_complex_outside_r, fft_complex_inside_r,
 		 FFTW_BACKWARD, FFTW_PATIENT);
-      }
-   }
+		}
+	}
 
-   printf("\tExecuting the FFTW\n");
-   // Execute the forward FFT
-   fftw_execute(* plan_b);
+	printf("\tExecuting the FFTW\n");
+	// Execute the forward FFT
+	fftw_execute(* plan_b);
 
-   if (!isGray) {
-      fftw_execute(* plan_g);
-      fftw_execute(* plan_r);
-   }
+	if (!isGray) {
+		fftw_execute(* plan_g);
+		fftw_execute(* plan_r);
+	}
 
-   complex_to_ipl(fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r, ipl_image_out->imageData, WIDTH, HEIGHT, DIM);
+	complex_to_ipl(fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r, ipl_image_out->imageData, WIDTH, HEIGHT, DIM);
    
-   fftw_cleanup();
+	fftw_cleanup();
 }*/
 
 /*
@@ -747,143 +718,117 @@ void ifft(fftw_complex * fft_complex_outside_b, fftw_complex * fft_complex_outsi
  */
 int main(int argc, char** argv)
 {
-   double hScale = 1.0;
-   double vScale = 1.0;
-   int lineWidth = 1;
-   double max = 0, mag = 0;
-   int i, j, k;
+	double hScale = 1.0;
+	double vScale = 1.0;
+	int lineWidth = 1;
+	double max = 0, mag = 0;
+	int i, j, k;
 
-   int WIDTH, HEIGHT, DIM;
-   char isGray = 1;
-   fftw_complex * fft_complex_inside_b = 0, * fft_complex_inside_g = 0,
-	   * fft_complex_inside_r = 0, * fft_complex_outside_b = 0,
-	   * fft_complex_outside_g = 0, * fft_complex_outside_r = 0;
+	int WIDTH, HEIGHT, DIM;
+	char isGray = 1;
+	fftw_complex * fft_complex_inside = 0, * fft_complex_outside = 0;
 
-   fftw_plan plan_r = 0, plan_g = 0, plan_b = 0;
+	fftw_plan plan = 0;
 
-   const char * path = "bw/gray.jpeg";
-   //const char * path = "grad.png";
-   //const char * path = "color/lenna.jpg";
-   //const char * path = "xadrez.png";
-   //const char * path = "tel.jpg";
-   //const char * path = "bw/telb.png";
-   //const char * path = "collor.jpg";
-   //const char * path = "bw/tinyb.jpg";
+	const char * path = "bw/gray.jpeg";
+	//const char * path = "grad.png";
+	//const char * path = "color/lenna.jpg";
+	//const char * path = "xadrez.png";
+	//const char * path = "tel.jpg";
+	//const char * path = "bw/telb.png";
+	//const char * path = "collor.jpg";
+	//const char * path = "bw/tinyb.jpg";
 
-   isGray = 1;
+	isGray = 1;
 
-   IplImage * image_in, * image_mag, * image_phase, * image_spectrum, * image_out;
+	IplImage * image_in, * image_mag, * image_phase, * image_spectrum, * image_out;
 
-   image_in = cvLoadImage(path, 1);
+	image_in = cvLoadImage(path, 1);
 
-   if (image_in == 0) {
-      exit(-1);
-   }
+	if (image_in == 0) {
+		exit(-1);
+	}
 
-   WIDTH = image_in->width;
-   HEIGHT = image_in->height;
-   DIM = image_in->nChannels;
+	WIDTH = image_in->width;
+	HEIGHT = image_in->height;
+	DIM = image_in->nChannels;
 
-   //print(image_in->imageData);
+	//print(image_in->imageData);
 
-   image_mag = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
-   image_phase = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
-   image_out = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
+	image_mag = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
+	image_phase = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
+	image_out = cvCreateImage(cvSize(WIDTH, HEIGHT), 8, 3);
 
-   initialize_fftw(& fft_complex_outside_b, & fft_complex_outside_g, & fft_complex_outside_r,
-	   & fft_complex_inside_b, & fft_complex_inside_g, & fft_complex_inside_r,
-	   WIDTH, HEIGHT);
+	initialize_fftw(& fft_complex_outside, & fft_complex_inside, WIDTH, HEIGHT);
+	
+	fft (fft_complex_outside, fft_complex_inside, image_in,  WIDTH, HEIGHT, DIM);
 
-   // create plans
-   printf("\tCreating the Plans for FORWARD\n");
+	ifft(fft_complex_inside, image_out, WIDTH, HEIGHT, DIM);
 
-   defines_plan(1, fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r,
-	   fft_complex_inside_b, fft_complex_inside_g, fft_complex_inside_r, 
-	   &plan_b, &plan_g, &plan_r, WIDTH, HEIGHT);
+	// free memory
+	fftw_destroy_plan(plan);
 
-   fft(fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r,
-	   fft_complex_inside_b, fft_complex_inside_g, fft_complex_inside_r,
-	   image_in, &plan_b, &plan_g, &plan_r, WIDTH, HEIGHT, DIM);
+	fftw_free(fft_complex_inside);
+	fftw_free(fft_complex_outside);
 
-   /*ifft(fft_complex_outside_b, fft_complex_outside_g, fft_complex_outside_r, 
-	   fft_complex_inside_b, fft_complex_inside_g, fft_complex_inside_r, 
-	   image_out, &plan_b, &plan_g, &plan_r, WIDTH, HEIGHT, DIM);*/
+	cvShowImage("IN", image_in);
+	cvShowImage("OUT", image_out);
+	/*
+	cvShowImage("iplimage_dft(): mag", image_mag);
+	cvShowImage("iplimage_dft(): phase", image_phase);
+	//cvShowImage("iplimage_dft(): spectrum", image_spectrum);
+	cvSaveImage("iplimage_dft_mag.png", image_mag, 0);
+	cvSaveImage("iplimage_dft_phase.png", image_phase, 0);
+	cvWaitKey(0);
+	 * 
+	 */
 
-   // free memory
-   fftw_destroy_plan(plan_b);
-   if (!isGray) {
-      fftw_destroy_plan(plan_g);
-      fftw_destroy_plan(plan_r);
-   }
-
-   fftw_free(fft_complex_inside_r);
-   fftw_free(fft_complex_outside_r);
-   if (!isGray) {
-      fftw_free(fft_complex_inside_g);
-      fftw_free(fft_complex_outside_g);
-      fftw_free(fft_complex_inside_b);
-      fftw_free(fft_complex_outside_b);
-   }
-
-
-   cvShowImage("IN", image_in);
-   cvShowImage("OUT", image_out);
-   /*
-   cvShowImage("iplimage_dft(): mag", image_mag);
-   cvShowImage("iplimage_dft(): phase", image_phase);
-   //cvShowImage("iplimage_dft(): spectrum", image_spectrum);
-   cvSaveImage("iplimage_dft_mag.png", image_mag, 0);
-   cvSaveImage("iplimage_dft_phase.png", image_phase, 0);
-   cvWaitKey(0);
-    * 
-    */
-
-   /*
-   //cvShowImage("iplimage_dft(): original", image_in);
-   //cvWaitKey();
+	/*
+	//cvShowImage("iplimage_dft(): original", image_in);
+	//cvWaitKey();
    
-   //Find the maximum value among the magnitudes
-   max = mag = 0;
-   k = 0;
-   for (i = 0; i < HEIGHT; i++){
-	   for (j = 0; j < WIDTH; j++){
-		   mag = sqrt(pow(dft_complex[k][0],2) + pow(dft_complex[k][1],2));
-		   if (max < mag)
-			   max = mag;
-		   k++;
-	   }
-   }
+	//Find the maximum value among the magnitudes
+	max = mag = 0;
+	k = 0;
+	for (i = 0; i < HEIGHT; i++){
+		for (j = 0; j < WIDTH; j++){
+			mag = sqrt(pow(dft_complex[k][0],2) + pow(dft_complex[k][1],2));
+			if (max < mag)
+				max = mag;
+			k++;
+		}
+	}
 
-   // Convert DFT result to output image
-   k = 0;
-   for (i = 0; i < HEIGHT; i++) {
-	   for (j = 0; j < WIDTH; j++) {
-		   mag = sqrt(pow(dft_complex[k][0],2) + pow(dft_complex[k][1],2));
-		   mag = 255*(mag/max);
-		   if (DEBUG)  printf("\tMAX: %.0f\tPix: %f\n", max, mag);
-		   ((uchar*)(image_spectrum->imageData + i * image_spectrum->widthStep))[j] = mag;
-		   k++;
-	   }
-   }
+	// Convert DFT result to output image
+	k = 0;
+	for (i = 0; i < HEIGHT; i++) {
+		for (j = 0; j < WIDTH; j++) {
+			mag = sqrt(pow(dft_complex[k][0],2) + pow(dft_complex[k][1],2));
+			mag = 255*(mag/max);
+			if (DEBUG)  printf("\tMAX: %.0f\tPix: %f\n", max, mag);
+			((uchar*)(image_spectrum->imageData + i * image_spectrum->widthStep))[j] = mag;
+			k++;
+		}
+	}
 
-   cvShowImage("iplimage_dft(): original", image_in);
-   cvShowImage("iplimage_dft(): result", image_spectrum);
-   cvSaveImage("iplimage_dft.png", image_spectrum, 0 );
-   cvWaitKey(0);
+	cvShowImage("iplimage_dft(): original", image_in);
+	cvShowImage("iplimage_dft(): result", image_spectrum);
+	cvSaveImage("iplimage_dft.png", image_spectrum, 0 );
+	cvWaitKey(0);
 
-   // Free memory in the end
-   fftw_destroy_plan(plan_forward);
-   fftw_free(in_complex);
-   fftw_free(dft_complex);
-   cvReleaseImage(&image_in);
-   cvReleaseImage(&image_spectrum);
-    */
+	// Free memory in the end
+	fftw_destroy_plan(plan_forward);
+	fftw_free(in_complex);
+	fftw_free(dft_complex);
+	cvReleaseImage(&image_in);
+	cvReleaseImage(&image_spectrum);
+	 */
 
-   cvReleaseImage(&image_in);
-   cvReleaseImage(&image_out);
-   /*cvReleaseImage(&image_mag);
-   cvReleaseImage(&image_phase);
-   cvReleaseImage(&image_spectrum);*/
+	cvReleaseImage(&image_in);
+	cvReleaseImage(&image_out);
+	/*cvReleaseImage(&image_mag);
+	cvReleaseImage(&image_phase);
+	cvReleaseImage(&image_spectrum);*/
 
-   return 0;
+	return 0;
 }
