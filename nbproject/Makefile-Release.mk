@@ -17,7 +17,7 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=gdb
+FC=gfortran
 AS=as
 
 # Macros
