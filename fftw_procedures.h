@@ -26,6 +26,9 @@
 
 const unsigned char MAXBGR = 255;
 
+void normalize_to_255 (fftw_complex * fftw, char type_data, int WIDTH, int HEIGHT) ;
+
+double normalize_interval(double x, double max, double min);
 
 void swap_fftw_pixels(fftw_complex * base_position, int upper_offset, int lower_offset);
 

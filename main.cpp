@@ -230,22 +230,10 @@ void swap_quadrants_gray_image(char * pixels, int WIDTH, int HEIGHT)
 			swap_pixels(pixels, upper_offset, lower_offset);
 
 			swap_pixels(pixels, upper_offset + half_col, lower_offset - half_col);
-
 		}
 	}
 }
 
-
-double normalize_interval(double x, double max, double min)
-{
-	double scale, new_value;
-
-	scale = (x - min) / (max - min);
-
-	new_value = (max * scale);
-
-	return new_value;
-}
 
 void magnitude_pixel_logarithm(double max, double min, char * data, 
 		  double * b, int WIDTH, int HEIGHT, int DIM)
@@ -468,9 +456,10 @@ int main(int argc, char** argv)
 
 	fftw_plan plan = 0;
 
-	const char * path = "bw/gray.jpeg";
+	//const char * path = "bw/gray.jpeg";
 	//const char * path = "grad.png";
 	//const char * path = "color/lenna.jpg";
+	const char * path = "bw/lenna.png";
 	//const char * path = "xadrez.png";
 	//const char * path = "tel.jpg";
 	//const char * path = "bw/telb.png";
@@ -494,9 +483,9 @@ int main(int argc, char** argv)
 
 	complex_fft = fft(image_in, WIDTH, HEIGHT, DIM);
 
-	//changed_fft = laplace(complex_fft, WIDTH, HEIGHT);
+	changed_fft = laplace(complex_fft, WIDTH, HEIGHT);
 	
-	image_out = ifft(complex_fft, WIDTH, HEIGHT, DIM);
+	image_out = ifft(changed_fft, WIDTH, HEIGHT, DIM);
 
 	printf("Finishing the program\n");
 	
@@ -509,8 +498,10 @@ int main(int argc, char** argv)
 	fftw_free(complex_fft);
 
 	printf("\tShowing the images\n");
-	cvShowImage("IN", image_in);
+	cvShowImage("IN",  image_in);
 	cvShowImage("OUT", image_out);
+	cvSaveImage("In.png", image_in, 0);
+	cvSaveImage("Out.png", image_out, 0);
 	/*
 	cvShowImage("iplimage_dft(): mag", image_mag);
 	cvShowImage("iplimage_dft(): phase", image_phase);

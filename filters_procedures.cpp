@@ -93,6 +93,7 @@ fftw_complex * laplace(fftw_complex * fft, int WIDTH, int HEIGHT) {
 			power_result = - ( (j - j_mesh) * (j - j_mesh)  +  (i - i_mesh) * (i - i_mesh) );
 			
 				
+			/*
 			if (0) {
 				fftw_out[current][0] = fft[current][0] * power_result; 
 				fftw_out[current][1] = fft[current][1];
@@ -100,7 +101,7 @@ fftw_complex * laplace(fftw_complex * fft, int WIDTH, int HEIGHT) {
 			} else {
 				fftw_out[current][0] = fft[current][0]; 
 				fftw_out[current][1] = fft[current][1] * power_result;	
-			}
+			}*/
 				
 			if (1) {
 				fftw_out[current][0] = fft[current][0] * power_result; 

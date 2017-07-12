@@ -13,6 +13,22 @@
 
 #include "fftw_procedures.h"
 
+void normalize_to_255 (fftw_complex * fftw, char type_data, int WIDTH, int HEIGHT) {
+	double smax = 255, smin = 0;
+	double max_current, min_current;
+	int i;
+	
+	for (i = 1; i < WIDTH * HEIGHT; i++) {
+		if (max_current < fftw[i][type_data]) max_current = fftw[i][type_data];
+		
+		if (min_current > fftw[i][type_data]) min_current = fftw[i][type_data];
+	}
+	
+	
+	for (i = 0; i < WIDTH * HEIGHT; i++)
+		fftw[i][type_data] =  ( fftw[i][type_data] - min_current ) * (smax - smin) / ( max_current - min_current ) + smin;
+}
+
 double normalize_interval(double x, double max, double min)
 {
 	double scale, new_value;
@@ -24,29 +40,29 @@ double normalize_interval(double x, double max, double min)
 	return new_value;
 }
 
-void logarithm_it(fftw_complex * fftw, int WIDTH, int HEIGHT)
+void logarithm_it(fftw_complex * fftw, char type_data, int WIDTH, int HEIGHT)
 {
 	double c;
 	int i;
 	char DEBUG = 0;
 	double max, min;
 	
-	min = max = fftw[0][0];
+	min = max = fftw[0][type_data];
 	
 	for (i = 1; i < WIDTH * HEIGHT; i++) {
-		if (max < fftw[i][0]) max = fftw[i][0];
+		if (max < fftw[i][type_data]) max = fftw[i][type_data];
 		
-		if (min > fftw[i][0]) min = fftw[i][0];
+		if (min > fftw[i][type_data]) min = fftw[i][type_data];
 	}
 
 	c = 255 / (log(1 + max));
 
 	for (i = 0; i < WIDTH * HEIGHT; i++) {
 
-		fftw[i][0] = c * log(1 + normalize_interval(fftw[i][0], max, min));
+		fftw[i][type_data] = c * log(1 + normalize_interval(fftw[i][type_data], max, min));
 
-		if (DEBUG) printf("(%08.3f, %08.3f)\n", log(1 + normalize_interval(fftw[i][0], max, min)), 
-				  c * log(1 + normalize_interval(fftw[i][0], max, min)));
+		if (DEBUG) printf("(%08.3f, %08.3f)\n", log(1 + normalize_interval(fftw[i][type_data], max, min)), 
+				  c * log(1 + normalize_interval(fftw[i][type_data], max, min)));
 	}
 }
 
@@ -185,21 +201,40 @@ void complex_to_ipl(fftw_complex * fft_complex_outside, char * data, int WIDTH, 
 
 	DEBUG = 0;
 
-	j = 0;
-	for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
+	normalize_to_255(fft_complex_outside, 0, WIDTH, HEIGHT);
+	normalize_to_255(fft_complex_outside, 1, WIDTH, HEIGHT);
+	
+	if (1) {
+		
+		j = 0;
+		for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
 
-		data[i + 0] = (unsigned char) (fft_complex_outside[j][0] / (WIDTH * HEIGHT));
+			data[i + 0] = (unsigned char) (fft_complex_outside[j][0]);
 
-		if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0] / (WIDTH * HEIGHT), 
-				  fft_complex_outside[j][1] / (WIDTH * HEIGHT), (unsigned char) data[i]);
+			if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0], 
+					  fft_complex_outside[j][1], (unsigned char) data[i]);
 
-		data[i + 1] = data[i];
-		data[i + 2] = data[i];
+			data[i + 1] = data[i];
+			data[i + 2] = data[i];
 
-		j++;
+			j++;
+		}
+	} else { 
+		j = 0;
+		for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
+
+			data[i + 0] = (unsigned char) (fft_complex_outside[j][0] / (WIDTH * HEIGHT));
+
+			if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0] / (double) (WIDTH * HEIGHT), 
+					  fft_complex_outside[j][1] / (double) (WIDTH * HEIGHT), (unsigned char) data[i]);
+
+			data[i + 1] = data[i];
+			data[i + 2] = data[i];
+
+			j++;
+		}
 	}
 	
-	logarithm_it(fft_complex_outside, int WIDTH, int HEIGHT);
 }
 
 /*
@@ -238,7 +273,7 @@ fftw_complex * fft(IplImage * ipl_image_in, int WIDTH, int HEIGHT, int DIM)
 
 	//fftw_cleanup();
 
-	//swap_quadrants_gray_fftw(complex_out, WIDTH, HEIGHT);
+	swap_quadrants_gray_fftw(complex_out, WIDTH, HEIGHT);
 	
 	return complex_out;
 }
@@ -267,7 +302,7 @@ IplImage * ifft(fftw_complex * complex_in, int WIDTH, int HEIGHT, int DIM)
 	
 	copy_complex(complex_in, &ifft_complex_in, WIDTH, HEIGHT);
 
-	//swap_quadrants_gray_fftw(ifft_complex_in, WIDTH, HEIGHT);
+	swap_quadrants_gray_fftw(ifft_complex_in, WIDTH, HEIGHT);
 	
 	printf("\tExecuting the FFTW\n");
 	// Execute the forward FFT
