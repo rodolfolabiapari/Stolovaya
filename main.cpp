@@ -459,10 +459,10 @@ int main(int argc, char** argv)
 	//const char * path = "bw/gray.jpeg";
 	//const char * path = "grad.png";
 	//const char * path = "color/lenna.jpg";
-	const char * path = "bw/lenna.png";
+	//const char * path = "bw/lenna.png";
 	//const char * path = "xadrez.png";
 	//const char * path = "tel.jpg";
-	//const char * path = "bw/telb.png";
+	const char * path = "bw/telb.png";
 	//const char * path = "collor.jpg";
 	//const char * path = "bw/tinyb.jpg";
 

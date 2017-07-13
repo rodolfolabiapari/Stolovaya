@@ -114,18 +114,21 @@ void swap_quadrants_gray_fftw(fftw_complex * c, int WIDTH, int HEIGHT)
 	full_col = WIDTH;
 	full_row = HEIGHT;
 
-	half_col = floor(full_col / (double) 2);
-	half_row = floor(full_row / (double) 2);
+	half_col = full_col / 2;
+	half_row = full_row / 2;
 
 	// swap quadrants diagonally
 	for (row = 0; row < half_row; row++) {
+		
 		for (col = 0; col < half_col; col++) {
+			
 			// Position of Second and First Quadrants.
 			upper_offset = col + (full_col * row);
+			
 			// Position of Third and Fourth Quadrants
 			lower_offset = upper_offset + // Current Position
 					  half_col + // Jump to next Quadrants
-					  (full_col * half_row);
+					  (full_col * half_row); // bottom 
 
 			swap_fftw_pixels(c, upper_offset, lower_offset);
 

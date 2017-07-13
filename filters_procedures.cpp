@@ -73,40 +73,32 @@ novaFourier = H .* fourier;
  */
 fftw_complex * laplace(fftw_complex * fft, int WIDTH, int HEIGHT) {
 	fftw_complex * fftw_out = 0;
-	int i, j, i_mesh, j_mesh, current;
-	double power_result;
+	int row = 0, col = 0, row_mesh = 0, col_mesh = 0, current = 0;
+	double power_result = 0;
 	
 	printf("Doing the laplace detector of edges\n");
 	
 	printf("\tCreating the news fftw_complex for processing\n");
 	create_fftw_complex(& fftw_out, WIDTH, HEIGHT);
 	
-	i_mesh = WIDTH / 2;
-	j_mesh = HEIGHT / 2;
+	row_mesh = HEIGHT / 2;
+	col_mesh = WIDTH  / 2;
 	
 	printf("\tProcessing\n");
-	for (i = 0; i < HEIGHT; i++) {
-		for (j = 0; j < WIDTH; j++) {
+	
+	for (row = 0; row < HEIGHT; row++) {
+		
+		for (col = 0; col < WIDTH; col++) {
 			
-			current = i * WIDTH + j;
+			current = row * WIDTH + col;
 			
-			power_result = - ( (j - j_mesh) * (j - j_mesh)  +  (i - i_mesh) * (i - i_mesh) );
+			power_result = - ( 
+					  (col - col_mesh) * (col - col_mesh)  +  
+					  (row - row_mesh) * (row - row_mesh) 
+					  );
 			
-				
-			/*
-			if (0) {
-				fftw_out[current][0] = fft[current][0] * power_result; 
-				fftw_out[current][1] = fft[current][1];
-				
-			} else {
-				fftw_out[current][0] = fft[current][0]; 
-				fftw_out[current][1] = fft[current][1] * power_result;	
-			}*/
-				
-			if (1) {
-				fftw_out[current][0] = fft[current][0] * power_result; 
-				fftw_out[current][1] = fft[current][1] * power_result;
-			}
+			fftw_out[current][0] = fft[current][0] * power_result; 
+			fftw_out[current][1] = fft[current][1] * power_result;
 		}
 	}
 	
