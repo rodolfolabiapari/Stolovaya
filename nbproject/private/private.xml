@@ -14,18 +14,10 @@
             </bookmark>
         </file>
         <file>
-            <url>main.cpp</url>
-            <bookmark id="6">
-                <name/>
-                <line>231</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
             <url>fftw_procedures.cpp</url>
             <bookmark id="7">
                 <name/>
-                <line>203</line>
+                <line>206</line>
                 <key/>
             </bookmark>
         </file>
