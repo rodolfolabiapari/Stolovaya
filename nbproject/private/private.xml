@@ -9,7 +9,7 @@
             <url>filters_procedures.cpp</url>
             <bookmark id="8">
                 <name/>
-                <line>92</line>
+                <line>94</line>
                 <key/>
             </bookmark>
         </file>
@@ -25,17 +25,16 @@
             <url>fftw_procedures.cpp</url>
             <bookmark id="7">
                 <name/>
-                <line>194</line>
+                <line>197</line>
                 <key/>
             </bookmark>
         </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/kiev/NetBeansProjects/Stolovaya/fftw_procedures.h</file>
-            <file>file:/home/kiev/NetBeansProjects/Stolovaya/main.cpp</file>
-            <file>file:/home/kiev/NetBeansProjects/Stolovaya/fftw_procedures.cpp</file>
-            <file>file:/home/kiev/NetBeansProjects/Stolovaya/filters_procedures.cpp</file>
+            <file>file:/home/kibenok/NetBeansProjects/Stolovaya/main.cpp</file>
+            <file>file:/home/kibenok/NetBeansProjects/Stolovaya/filters_procedures.cpp</file>
+            <file>file:/home/kibenok/NetBeansProjects/Stolovaya/fftw_procedures.cpp</file>
         </group>
     </open-files>
 </project-private>
