@@ -18,6 +18,8 @@ void normalize_to_255 (fftw_complex * fftw, char type_data, int WIDTH, int HEIGH
 	double max_current, min_current;
 	int i;
 	
+	max_current = min_current = fftw[0][type_data];
+	
 	for (i = 1; i < WIDTH * HEIGHT; i++) {
 		if (max_current < fftw[i][type_data]) max_current = fftw[i][type_data];
 		
@@ -80,7 +82,7 @@ void swap_fftw_pixels(fftw_complex * base_position, int upper_offset, int lower_
 	base_position[upper_offset + 0][1] = base_position[lower_offset + 0][1];
 	base_position[lower_offset + 0][1] = buffer[1];
 
-
+	/*
 	//G
 	buffer[0] = base_position[upper_offset + 1][0];
 	base_position[upper_offset + 1][0] = base_position[lower_offset + 1][0];
@@ -99,6 +101,7 @@ void swap_fftw_pixels(fftw_complex * base_position, int upper_offset, int lower_
 	buffer[1] = base_position[upper_offset + 2][1];
 	base_position[upper_offset + 2][1] = base_position[lower_offset + 2][1];
 	base_position[lower_offset + 2][1] = buffer[1];
+	 * */
 }
 
 /*
@@ -274,6 +277,8 @@ fftw_complex * fft(IplImage * ipl_image_in, int WIDTH, int HEIGHT, int DIM)
 
 	fftw_destroy_plan(plan);
 
+	fftw_free(complex_in);
+	
 	//fftw_cleanup();
 
 	swap_quadrants_gray_fftw(complex_out, WIDTH, HEIGHT);
@@ -316,6 +321,9 @@ IplImage * ifft(fftw_complex * complex_in, int WIDTH, int HEIGHT, int DIM)
 	fftw_cleanup();
 	
 	fftw_destroy_plan(plan);
+	fftw_free(ifft_complex_in);
+			  
+	fftw_free(ifft_complex_out);
 
 	return ipl_out;
 }
