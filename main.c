@@ -28,7 +28,6 @@
 int main(int argc, char** argv)
 {
 	int WIDTH, HEIGHT, DIM;
-	char isGray = 1;
 	fftw_complex * complex_fft = 0, * changed_fft = 0;
 
 	fftw_plan plan = 0;
@@ -42,8 +41,6 @@ int main(int argc, char** argv)
 	//const char * path = "bw/telb.png";
 	//const char * path = "collor.jpg";
 	//const char * path = "bw/tinyb.jpg";
-
-	isGray = 1;
 
 	IplImage * image_in = 0, * image_out = 0;
 
@@ -78,11 +75,13 @@ int main(int argc, char** argv)
 	fftw_free(changed_fft);
 
 	printf("\tShowing the images\n");
-	/*cvShowImage("IN",  image_in);
+	cvShowImage("IN",  image_in);
 	cvShowImage("OUT", image_out);
-	cvSaveImage("In.png", image_in, 0);
-	cvSaveImage("Out.png", image_out, 0);
-	/*
+	/*cvSaveImage("In.png", image_in, 0);
+	cvSaveImage("Out.png", image_out, 0);*/
+	
+	cvWaitKey(0);
+    /*
 	cvShowImage("iplimage_dft(): mag", image_mag);
 	cvShowImage("iplimage_dft(): phase", image_phase);
 	//cvShowImage("iplimage_dft(): spectrum", image_spectrum);
@@ -100,7 +99,6 @@ int main(int argc, char** argv)
 	cvReleaseImage(&image_spectrum);
 	 */
 	
-	cvWaitKey();
 	
 	
 	printf("\tCleaning the images\n");
