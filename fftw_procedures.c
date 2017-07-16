@@ -18,17 +18,17 @@ void normalize_to_255 (fftw_complex * fftw, char type_data, int WIDTH, int HEIGH
 	double max_current, min_current;
 	int i;
 	
-	max_current = min_current = fftw[0 + type_data];
+	max_current = min_current = fftw[0][type_data];
 	
 	for (i = 1; i < WIDTH * HEIGHT; i++) {
-		if (max_current < (double) fftw[i + type_data]) max_current = fftw[i + type_data];
+		if (max_current < fftw[i][type_data]) max_current = fftw[i][type_data];
 		
-		if (min_current > (double) fftw[i + type_data]) min_current = fftw[i + type_data];
+		if (min_current > fftw[i][type_data]) min_current = fftw[i][type_data];
 	}
 	
 	
 	for (i = 0; i < WIDTH * HEIGHT; i++)
-		fftw[i + type_data] =  ( fftw[i + type_data] - min_current ) * (smax - smin) / ( max_current - min_current ) + smin;
+		fftw[i][type_data] =  ( fftw[i][type_data] - min_current ) * (smax - smin) / ( max_current - min_current ) + smin;
 }
 
 double normalize_interval(double x, double max, double min)
@@ -49,58 +49,58 @@ void logarithm_it(fftw_complex * fftw, char type_data, int WIDTH, int HEIGHT)
 	char DEBUG = 0;
 	double max, min;
 	
-	min = max = fftw[0 + type_data];
+	min = max = fftw[0][type_data];
 	
 	for (i = 1; i < WIDTH * HEIGHT; i++) {
-		if (max < (double) fftw[i + type_data]) max = fftw[i + type_data];
+		if (max < fftw[i][type_data]) max = fftw[i][type_data];
 		
-		if (min > (double) fftw[i + type_data]) min = fftw[i + type_data];
+		if (min > fftw[i][type_data]) min = fftw[i][type_data];
 	}
 
 	c = 255 / (log(1 + max));
 
 	for (i = 0; i < WIDTH * HEIGHT; i++) {
 
-		fftw[i + type_data] = c * log(1 + normalize_interval(fftw[i + type_data], max, min));
+		fftw[i][type_data] = c * log(1 + normalize_interval(fftw[i][type_data], max, min));
 
-		if (DEBUG) printf("(%08.3f, %08.3f)\n", log(1 + normalize_interval(fftw[i + type_data], max, min)), 
-				  c * log(1 + normalize_interval(fftw[i + type_data], max, min)));
+		if (DEBUG) printf("(%08.3f, %08.3f)\n", log(1 + normalize_interval(fftw[i][type_data], max, min)), 
+				  c * log(1 + normalize_interval(fftw[i][type_data], max, min)));
 	}
 }
 
 
 void swap_fftw_pixels(fftw_complex * base_position, int upper_offset, int lower_offset)
 {
-	double buffer;
+	fftw_complex buffer;
 
 	//B
-	buffer = base_position[upper_offset + 0 + 0];
-	base_position[upper_offset + 0 + 0] = base_position[lower_offset + 0 + 0];
-	base_position[lower_offset + 0 + 0] = buffer;
+	buffer[0] = base_position[upper_offset + 0][0];
+	base_position[upper_offset + 0][0] = base_position[lower_offset + 0][0];
+	base_position[lower_offset + 0][0] = buffer[0];
 
-	buffer = base_position[upper_offset + 0 + 1];
-	base_position[upper_offset + 0 + 1] = base_position[lower_offset + 0 + 1];
-	base_position[lower_offset + 0 + 1] = buffer;
+	buffer[1] = base_position[upper_offset + 0][1];
+	base_position[upper_offset + 0][1] = base_position[lower_offset + 0][1];
+	base_position[lower_offset + 0][1] = buffer[1];
 
 	/*
 	//G
-	buffer = base_position[upper_offset + 1 + 0];
-	base_position[upper_offset + 1 + 0] = base_position[lower_offset + 1 + 0];
-	base_position[lower_offset + 1 + 0] = buffer;
+	buffer[0] = base_position[upper_offset + 1][0];
+	base_position[upper_offset + 1][0] = base_position[lower_offset + 1][0];
+	base_position[lower_offset + 1][0] = buffer[0];
 
-	buffer = base_position[upper_offset + 1 + 1];
-	base_position[upper_offset + 1 + 1] = base_position[lower_offset + 1 + 1];
-	base_position[lower_offset + 1 + 1] = buffer;
+	buffer[1] = base_position[upper_offset + 1][1];
+	base_position[upper_offset + 1][1] = base_position[lower_offset + 1][1];
+	base_position[lower_offset + 1][1] = buffer[1];
 
 
 	//R
-	buffer = base_position[upper_offset + 2 + 0];
-	base_position[upper_offset + 2 + 0] = base_position[lower_offset + 2 + 0];
-	base_position[lower_offset + 2 + 0] = buffer;
+	buffer[0] = base_position[upper_offset + 2][0];
+	base_position[upper_offset + 2][0] = base_position[lower_offset + 2][0];
+	base_position[lower_offset + 2][0] = buffer[0];
 
-	buffer = base_position[upper_offset + 2 + 1];
-	base_position[upper_offset + 2 + 1] = base_position[lower_offset + 2 + 1];
-	base_position[lower_offset + 2 + 1] = buffer;
+	buffer[1] = base_position[upper_offset + 2][1];
+	base_position[upper_offset + 2][1] = base_position[lower_offset + 2][1];
+	base_position[lower_offset + 2][1] = buffer[1];
 	 * */
 }
 
@@ -150,8 +150,8 @@ void copy_complex(fftw_complex * from, fftw_complex ** to, int WIDTH, int HEIGHT
 	int i = 0;
 	
 	for (i = 0; i < WIDTH * HEIGHT; i++) {
-		(*to)[i + 0] = from[i + 0];
-		(*to)[i + 1] = from[i + 1];
+		(*to)[i][0] = from[i][0];
+		(*to)[i][1] = from[i][1];
 	}
 }
 
@@ -186,9 +186,9 @@ void ipl_to_complex(fftw_complex * complex_fft, char * data, int WIDTH, int HEIG
 	j = 0;
 	for (i = 0; i < WIDTH * HEIGHT; i++) {
 
-		complex_fft[i + 0] = (unsigned char) data[j];
+		complex_fft[i][0] = (unsigned char) data[j];
 
-		if (DEBUG) printf("%6d:%d\t%f\n", i, WIDTH * HEIGHT, (double) complex_fft[i + 0]);
+		if (DEBUG) printf("%6d:%d\t%f\n", i, WIDTH * HEIGHT, complex_fft[i][0]);
 
 		j += 3;
 	}
@@ -215,9 +215,10 @@ void complex_to_ipl(fftw_complex * fft_complex_outside, char * data, int WIDTH, 
 		j = 0;
 		for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
 
-			data[i + 0] = (unsigned char) (fft_complex_outside[j + 0]);
+			data[i + 0] = (unsigned char) (fft_complex_outside[j][0]);
 
-			if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, (double) fft_complex_outside[j + 0], (double) fft_complex_outside[j + 1], (unsigned char) data[i]);
+			if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0], 
+					  fft_complex_outside[j][1], (unsigned char) data[i]);
 
 			data[i + 1] = data[i];
 			data[i + 2] = data[i];
@@ -228,10 +229,10 @@ void complex_to_ipl(fftw_complex * fft_complex_outside, char * data, int WIDTH, 
 		j = 0;
 		for (i = 0; i < WIDTH * HEIGHT * DIM; i += 3) {
 
-			data[i + 0] = (unsigned char) (fft_complex_outside[j + 0] / (WIDTH * HEIGHT));
+			data[i + 0] = (unsigned char) (fft_complex_outside[j][0] / (WIDTH * HEIGHT));
 
-			if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, (double) fft_complex_outside[j + 0] / (double) (WIDTH * HEIGHT), 
-					  (double) fft_complex_outside[j + 1] / (double) (WIDTH * HEIGHT), (unsigned char) data[i]);
+			if (DEBUG) printf("%6d:%d\t(R%6.3f:I%6.3f, %d)\n", i, WIDTH * HEIGHT, fft_complex_outside[j][0] / (double) (WIDTH * HEIGHT), 
+					  fft_complex_outside[j][1] / (double) (WIDTH * HEIGHT), (unsigned char) data[i]);
 
 			data[i + 1] = data[i];
 			data[i + 2] = data[i];
@@ -263,7 +264,7 @@ fftw_complex * fft(IplImage * ipl_image_in, int WIDTH, int HEIGHT, int DIM)
 			  FFTW_FORWARD, FFTW_PATIENT);
 
 
-	// Assign the values of image (BGR) to the real parts of the array (array[i + 0])
+	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
 	printf("\tCoping the datas of image\n");
 
 	ipl_to_complex(complex_in, (*ipl_image_in).imageData, WIDTH, HEIGHT);
@@ -301,7 +302,7 @@ IplImage * ifft(fftw_complex * complex_in, int WIDTH, int HEIGHT, int DIM)
 	create_fftw_complex(& ifft_complex_out, WIDTH, HEIGHT);
 	
 
-	// Assign the values of image (BGR) to the real parts of the array (array[i + 0])
+	// Assign the values of image (BGR) to the real parts of the array (array[i][0])
 	printf("\tCoping the datas of image\n");
 
 	plan = fftw_plan_dft_2d(WIDTH, HEIGHT, ifft_complex_in, ifft_complex_out,

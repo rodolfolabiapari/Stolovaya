@@ -28,7 +28,7 @@
 int main(int argc, char** argv)
 {
 	int WIDTH, HEIGHT, DIM;
-	fftw_complex * complex_fft = 0, * changed_fft = 0;
+	//fftw_complex * complex_fft = 0, * changed_fft = 0;
 
 	fftw_plan plan = 0;
 
@@ -57,11 +57,15 @@ int main(int argc, char** argv)
 
 	printf("(%d, %d, %d)\n", WIDTH, HEIGHT, DIM);
 	
-	complex_fft = fft(image_in, WIDTH, HEIGHT, DIM);
 
-	changed_fft = laplace(complex_fft, WIDTH, HEIGHT);
+    cvDFT(src, dst, DFT_COMPLEX_OUTPUT, 0);
+
+	 = laplaceFFTW(, WIDTH, HEIGHT);
 	
-	image_out = ifft(changed_fft, WIDTH, HEIGHT, DIM);
+
+
+    cvDFT(src, dst, DFT_REAL_OUTPUT, 0);
+
 
 	printf("Finishing the program\n");
 	
